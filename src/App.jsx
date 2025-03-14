@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Search from "./components/Search";
+import Spinner from "./components/Spinner.jsx";
 
 const api_base_url = "https://api.themoviedb.org/3";
 
@@ -35,7 +36,7 @@ const App = () => {
 
             if(data.Response === 'False'){
                 setErrorMessage(data.Error || "Failed to fetch movies.");
-                setMovieList(value: []);
+                setMovieList([]);
                 return;
             }
 
@@ -70,8 +71,20 @@ const App = () => {
                 </header>
 
                 <section className="all-movies">
-                    <h2>All Movies</h2>
-                    {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+                    <h2 className="mt-[40px]">All Movies</h2>
+                    {isLoading ? (
+                        <Spinner />
+                    ) : errorMessage ? (
+                        <p className="text-red-500">{errorMessage}</p>
+                    ): (
+                        <ul>
+                            {movieList.map((movie) => {
+                                return (
+                                    <p key={movie.id} className="text-white">{movie.title}</p>
+                                )
+                            })}
+                        </ul>
+                    )}
                 </section>
             </div>
         </main>
