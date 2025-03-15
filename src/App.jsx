@@ -4,7 +4,6 @@ import Spinner from "./components/Spinner.jsx";
 import MovieCard from "./components/MovieCard.jsx";
 
 const api_base_url = "https://api.themoviedb.org/3";
-
 const api_key = import.meta.env.VITE_TMDB_API_KEY;
 
 const api_options = {
@@ -19,40 +18,46 @@ const App = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [movieList, setMovieList] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
-    const fetchMovies = async () => {
+    // Debounce Effect (Wait 500ms after last keystroke)
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [searchTerm]);
+
+    const fetchMovies = async (query = "") => {
         setIsLoading(true);
-        setSearchTerm("");
+        setErrorMessage("");
 
         try {
-            const endpoint = `${api_base_url}/discover/movie?sort_by=popularity.desc`;
-            const response = await fetch(endpoint, api_options);
+            const endpoint = query
+                ? `${api_base_url}/search/movie?query=${encodeURIComponent(query)}`
+                : `${api_base_url}/discover/movie?sort_by=popularity.desc`;
 
+            const response = await fetch(endpoint, api_options);
             if (!response.ok) {
                 throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
-
-            if(data.Response === 'False'){
-                setErrorMessage(data.Error || "Failed to fetch movies.");
-                setMovieList([]);
-                return;
-            }
-
             setMovieList(data.results || []);
         } catch (e) {
             console.error(`Error fetching movies: ${e}`);
             setErrorMessage("Error Fetching Movies. Please try again later.");
-        }finally{
-            setIsLoading(true);
+        } finally {
+            setIsLoading(false);
         }
     };
 
+    // Fetch movies when debouncedSearch updates
     useEffect(() => {
-        fetchMovies();
-    }, []);
+        fetchMovies(debouncedSearch);
+    }, [debouncedSearch]);
 
     return (
         <main>
@@ -77,13 +82,11 @@ const App = () => {
                         <Spinner />
                     ) : errorMessage ? (
                         <p className="text-red-500">{errorMessage}</p>
-                    ): (
+                    ) : (
                         <ul>
-                            {movieList.map((movie) => {
-                                return (
-                                    <MovieCard key={movie.id} movie={movie} />
-                                )
-                            })}
+                            {movieList.map((movie) => (
+                                <MovieCard key={movie.id} movie={movie} />
+                            ))}
                         </ul>
                     )}
                 </section>
