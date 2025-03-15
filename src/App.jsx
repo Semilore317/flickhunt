@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import Search from "./components/Search";
 import Spinner from "./components/Spinner.jsx";
 import MovieCard from "./components/MovieCard.jsx";
-import {updateSearchCount} from "./appwrite.js";
+import {getTrendingMovies, updateSearchCount} from "./appwrite.js";
+import {isTSIntersectionType} from "eslint-plugin-react/lib/util/ast.js";
 
 
 const api_base_url = "https://api.themoviedb.org/3";
@@ -22,6 +23,7 @@ const App = () => {
     const [movieList, setMovieList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [trendingMovies, setTrendingMovies] = useState([]);
 
     // Debounce Effect (Wait 500ms after last keystroke)
     useEffect(() => {
@@ -61,10 +63,24 @@ const App = () => {
         }
     };
 
+    const loadTrendingMovies = async () => {
+        try{
+            const movies = await getTrendingMovies();
+            setTrendingMovies(movies);
+        }catch(error){
+            console.error(`Error fetching trending movies${error}`);
+            setErrorMessage("Error fetching trending movies");
+        }
+    }
+
     // Fetch movies when debouncedSearch updates
     useEffect(() => {
         fetchMovies(debouncedSearch);
     }, [debouncedSearch]);
+
+    useEffect(() => {
+        loadTrendingMovies()
+    }, [])
 
     return (
         <main>
@@ -83,8 +99,23 @@ const App = () => {
                     <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </header>
 
+                {trendingMovies.length > 0 && (
+                    <section className="trending">
+                        <h2>Trending Movies</h2>
+
+                        <ul>
+                            {trendingMovies.map((movie, index) => (
+                                <li key={movie.$id}>
+                                    <p>{ index + 1 }</p>
+                                    <img src={movie.poster_url} alt={movie.title}/>
+                                    <p className="text-white">{movie.title}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
                 <section className="all-movies">
-                    <h2 className="mt-[40px]">All Movies</h2>
+                    <h2>All Movies</h2>
                     {isLoading ? (
                         <Spinner />
                     ) : errorMessage ? (
