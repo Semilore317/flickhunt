@@ -19,7 +19,7 @@ const App = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [movieList, setMovieList] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchMovies = async () => {
         setIsLoading(true);
@@ -46,7 +46,7 @@ const App = () => {
             console.error(`Error fetching movies: ${e}`);
             setErrorMessage("Error Fetching Movies. Please try again later.");
         }finally{
-            setIsLoading(false);
+            setIsLoading(true);
         }
     };
 
