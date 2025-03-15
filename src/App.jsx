@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Search from "./components/Search";
 import Spinner from "./components/Spinner.jsx";
 import MovieCard from "./components/MovieCard.jsx";
+import {updateSearchCount} from "./appwrite.js";
+
 
 const api_base_url = "https://api.themoviedb.org/3";
 const api_key = import.meta.env.VITE_TMDB_API_KEY;
@@ -46,6 +48,11 @@ const App = () => {
 
             const data = await response.json();
             setMovieList(data.results || []);
+
+            if(query && data.results.length > 0) {
+                await updateSearchCount(query, data.results[0]);
+            }
+
         } catch (e) {
             console.error(`Error fetching movies: ${e}`);
             setErrorMessage("Error Fetching Movies. Please try again later.");
